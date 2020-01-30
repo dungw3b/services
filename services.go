@@ -46,11 +46,11 @@ func init() {
 				glog.Info("---Reload configuration---")
 				for _, service := range Services {
 					service.Stop()
+					service.Init()
 					service.ReloadData()
 					go func() {
 						if err := service.Start(); err != nil {
 							glog.Error("Start ", service.Name(), " error ", err)
-							waitgroup.Done()
 						}
 					}()
 					time.Sleep(100 * time.Millisecond)
