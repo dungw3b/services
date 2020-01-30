@@ -93,7 +93,7 @@ func Init(parser ParseConfigFunc) {
 	parseConfig(cfg)
 }
 
-func GetService(name string) Service {
+func GetService(name string) interface{} {
 	for _, service := range Services {
 		if service.Name() == name {
 			glog.Info(service)
