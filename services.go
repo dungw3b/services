@@ -93,10 +93,11 @@ func Init(parser ParseConfigFunc) {
 	parseConfig(cfg)
 }
 
-func GetService(name string) *Service {
+func GetService(name string) Service {
 	for _, service := range Services {
 		if service.Name() == name {
-			return &service
+			glog.Info(service)
+			return service
 		}
 	}
 	return nil
