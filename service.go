@@ -13,4 +13,5 @@ type Service interface {
 	Start() error // start service
 	Stop() // graceful stop service
 	GetService() interface{} // get instance
+	ReloadData() // reload configuration
 }

@@ -1,4 +1,4 @@
 #!/bin/bash
 
 ./build.sh
-sudo ./services -c conf/app.json
+./services -c conf/app.json

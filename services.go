@@ -6,20 +6,30 @@ package services
 
 import (
 	"os"
+	"fmt"
+	"flag"
 	"sync"
 	"time"
 	"syscall"
+	"io/ioutil"
 	"os/signal"
 	"github.com/golang/glog"
+	"github.com/olebedev/config"
 )
 
 var (
 	Config map[string]interface{}
-	waitgroup sync.WaitGroup
 	Services []Service
+
+	waitgroup sync.WaitGroup
+	configPath string
+	parseConfig ParseConfigFunc
 )
 
+type ParseConfigFunc func(cfg *config.Config)
+
 func init() {
+	Config = map[string]interface{}{}
 	waitgroup.Add(1)
 	
 	// manage signal
@@ -30,13 +40,21 @@ func init() {
 		for {
 			s := <-sig
 			switch s {
-			/*
+			
 			// reload configuration
 			case syscall.SIGHUP:
 				glog.Info("---Reload configuration---")
-				ReloadConfig()
-				glog.Info("--------------------------")
-			*/
+				for _, service := range Services {
+					service.Stop()
+					service.ReloadData()
+					go func() {
+						if err := service.Start(); err != nil {
+							glog.Error("Start ", service.Name(), " error ", err)
+							waitgroup.Done()
+						}
+					}()
+				}
+			
 			// graceful stop
 			default:
 				glog.Warning("Graceful stop")
@@ -49,6 +67,47 @@ func init() {
 	}()
 }
 
+func Init(parser ParseConfigFunc) {
+	os.Args = append(os.Args, "-logtostderr=true")
+	path := flag.String("c", "", "full path to config file Ex. conf/app.json")
+	flag.Parse()
+	if len(*path) == 0 {
+		fmt.Println("\nUsage:", os.Args[0], "-c conf/app.json");
+		os.Exit(1)
+	}
+
+	configPath = *path
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		glog.Fatal("Can not read configuration file ", *path)
+		os.Exit(1)
+	}
+	cfg, err := config.ParseJson(string(data))
+	if err != nil {
+		glog.Fatal("Can not parse JSON configuration file ", *path)
+		os.Exit(1)
+	}
+
+	parseConfig = parser
+	parseConfig(cfg)
+}
+
+func reloadConfig(path string) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		glog.Error("Can not read configuration file ", path)
+		return
+	}
+	cfg, err := config.ParseJson(string(data))
+	if err != nil {
+		glog.Error("Can not parse JSON configuration file ", err)
+		return
+	}
+
+	parseConfig(cfg)
+	glog.Info("Reloaded configuration file")
+}
+
 func registerService(service Service) {
 	Services = append(Services, service)
 }
@@ -59,7 +118,7 @@ func Run(services ...Service) {
 		service.Init()
 		go func() {
 			if err := service.Start(); err != nil {
-				glog.Error("Service ", service.Name(), " error ", err)
+				glog.Error("Start ", service.Name(), " error ", err)
 				waitgroup.Done()
 			}
 		}()
@@ -77,9 +136,17 @@ func SetConfig(name string, value interface{}) {
 }
 
 func GetConfigString(name string) string {
-	return Config[name].(string)
+	if _,found := Config[name]; found {
+		return Config[name].(string)
+	}
+	glog.Error("Config ", name, " not found, return empty string")
+	return ""
 }
 
 func GetConfigInt(name string) int {
-	return Config[name].(int)
+	if _,found := Config[name]; found {
+		return Config[name].(int)
+	}
+	glog.Error("Config ", name, " not found, return int 0")
+	return 0
 }

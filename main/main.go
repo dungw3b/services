@@ -5,11 +5,10 @@ github.com/dungw3b/services
 package main
 
 import (
-	"os"
-	"fmt"
-	"flag"
+	"time"
+	"context"
 	"strconv"
-	"io/ioutil"
+	"net/http"
 	"github.com/golang/glog"
 	"github.com/olebedev/config"
 	"github.com/dungw3b/services"
@@ -32,19 +31,24 @@ func (s *SimpleService) Init() {
 	s.conn.HidePort = true
 }
 
+func (s *SimpleService) ReloadData() {
+	glog.Info("Reloaded "+ s.Name(), " data")
+}
+
 func (s *SimpleService) Start() error {
-	port := strconv.Itoa(GetConfigInt("api.port"))
-	addr := services.GetConfigString("api.listen") +":"+ port
-	s := &http.Server {
+	port := strconv.Itoa(services.GetConfigInt("service.port"))
+	addr := services.GetConfigString("service.listen") +":"+ port
+	/*server := &http.Server {
 		Addr: addr,
-	}
+	}*/
 
 	s.conn.GET("/", s.handler)
 
-	glog.Info("Start "+ a.Name() +" on "+ addr)
-	if err := s.conn.StartServer(s); err != nil {
+	glog.Info("Start "+ s.Name() +" on "+ addr)
+	/*if err := s.conn.StartServer(server); err != nil {
 		return err
-	}
+	}*/
+	s.conn.Start(addr)
 	return nil
 }
 
@@ -53,14 +57,14 @@ func (s *SimpleService) Stop() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := s.conn.Shutdown(ctx); err != nil {
-			glog.Error("Shutdown "+ a.Name() +" error ")
+			glog.Error("Shutdown "+ s.Name() +" error ")
 			glog.Error(err)
 		}
-		glog.Info("Stopped "+ a.Name())
+		glog.Info("Stopped "+ s.Name())
 	}
 }
 
-func (s *SimpleService) GetService() *SimpleService {
+func (s *SimpleService) GetService() interface{} {
 	return s
 }
 
@@ -73,25 +77,7 @@ func NewSimpleService() *SimpleService {
 }
 
 func init() {
-	os.Args = append(os.Args, "-logtostderr=true")
-	path := flag.String("c", "", "full path to config file Ex. conf/app.json")
-	flag.Parse()
-	if len(*path) == 0 {
-		fmt.Println("\nUsage:", os.Args[0], "-c conf/app.json");
-		os.Exit(1)
-	}
-	data, err := ioutil.ReadFile(*path)
-	if err != nil {
-		fmt.Println("Can not read configuration file "+ *path)
-		os.Exit(1)
-	}
-	cfg, err := config.ParseJson(string(data))
-	if err != nil {
-		fmt.Println("Can not parse JSON configuration file "+ *path)
-		os.Exit(1)
-	}
-	
-	parseConfig(cfg)
+	services.Init(parseConfig)
 }
 
 func parseConfig(cfg *config.Config) {
@@ -117,8 +103,7 @@ func parseConfig(cfg *config.Config) {
 func main() {
 	
 	services.Run(
-		NewSimpleService()
+		NewSimpleService(),
 	)
-	defer services.Close()
-	
+
 }
