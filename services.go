@@ -6,14 +6,11 @@ package services
 
 import (
 	"os"
-	"fmt"
 	"sync"
 	"time"
 	"syscall"
 	"os/signal"
-	"encoding/json"
 	"github.com/golang/glog"
-	"github.com/olebedev/config"
 )
 
 var (
