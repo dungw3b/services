@@ -92,6 +92,15 @@ func Init(parser ParseConfigFunc) {
 	parseConfig(cfg)
 }
 
+func GetService(name string) *Service {
+	for _, service := range Services {
+		if service.Name() == name {
+			return service
+		}
+	}
+	return nil
+}
+
 func reloadConfig(path string) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
