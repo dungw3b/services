@@ -44,7 +44,7 @@ func (s *SimpleService) Start() error {
 
 	s.conn.GET("/", s.handler)
 
-	glog.Info("Start "+ s.Name() +" on "+ addr)
+	glog.Info("Started "+ s.Name() +" on "+ addr)
 	/*if err := s.conn.StartServer(server); err != nil {
 		return err
 	}*/

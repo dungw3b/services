@@ -53,6 +53,7 @@ func init() {
 							waitgroup.Done()
 						}
 					}()
+					time.Sleep(100 * time.Millisecond)
 				}
 			
 			// graceful stop
@@ -95,7 +96,7 @@ func Init(parser ParseConfigFunc) {
 func GetService(name string) *Service {
 	for _, service := range Services {
 		if service.Name() == name {
-			return service
+			return &service
 		}
 	}
 	return nil
