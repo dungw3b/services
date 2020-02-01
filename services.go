@@ -140,7 +140,7 @@ func Run(services ...Service) {
 	// wait
 	waitgroup.Wait()
 	glog.Flush()
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second)
 }
 
 func SetConfig(name string, value interface{}) {
