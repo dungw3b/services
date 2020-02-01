@@ -64,7 +64,7 @@ func (s *SimpleService) Stop() {
 	}
 }
 
-func (s *SimpleService) GetService() interface{} {
+func (s *SimpleService) GetInstance() interface{} {
 	return s
 }
 
