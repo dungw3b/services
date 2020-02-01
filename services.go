@@ -62,7 +62,7 @@ func init() {
 				for _, service := range Services {
 					service.Stop()
 				}
-				waitgroup.Done()
+				//waitgroup.Done()
 			}
 		}
 	}()
@@ -127,6 +127,7 @@ func Run(services ...Service) {
 	for _, service := range services {
 		registerService(service)
 		service.Init()
+		waitgroup.Add(1)
 		go func() {
 			if err := service.Start(); err != nil {
 				glog.Error("Start ", service.Name(), " error ", err)
