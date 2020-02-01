@@ -30,7 +30,6 @@ type ParseConfigFunc func(cfg *config.Config)
 
 func init() {
 	Config = map[string]interface{}{}
-	waitgroup.Add(1)
 	
 	// manage signal
 	sig := make(chan os.Signal, 1)
@@ -62,8 +61,8 @@ func init() {
 				glog.Warning("Graceful stop")
 				for _, service := range Services {
 					service.Stop()
+					waitgroup.Done()
 				}
-				waitgroup.Done()
 			}
 		}
 	}()
@@ -129,6 +128,7 @@ func Run(services ...Service) {
 		registerService(service)
 		service.Init()
 		go func() {
+			waitgroup.Add(1)
 			if err := service.Start(); err != nil {
 				glog.Error("Start ", service.Name(), " error ", err)
 				waitgroup.Done()
