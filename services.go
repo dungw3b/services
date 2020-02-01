@@ -128,10 +128,12 @@ func Run(services ...Service) {
 		registerService(service)
 		service.Init()
 		waitgroup.Add(1)
+		glog.Info("waitgroup.Add(1)")
 		go func() {
 			if err := service.Start(); err != nil {
 				glog.Error("Start ", service.Name(), " error ", err)
 				waitgroup.Done()
+				glog.Info("waitgroup.Done()")
 			}
 		}()
 		time.Sleep(100 * time.Millisecond)
