@@ -24,12 +24,14 @@ var (
 	waitgroup sync.WaitGroup
 	configPath string
 	parseConfig ParseConfigFunc
+	iStop bool
 )
 
 type ParseConfigFunc func(cfg *config.Config)
 
 func init() {
-	Config = map[string]interface{}{}
+	Config = make(map[string]interface{})
+	iStop = false
 	
 	// manage signal
 	sig := make(chan os.Signal, 1)
@@ -43,26 +45,37 @@ func init() {
 			// reload configuration
 			case syscall.SIGHUP:
 				glog.Info("---Reload configuration---")
+				startFail := false
 				for _, service := range Services {
+					iStop = true
 					service.Stop()
 					service.Init()
 					service.ReloadData()
 					go func() {
 						if err := service.Start(); err != nil {
-							glog.Error("Start ", service.Name(), " error ", err)
-							waitgroup.Done()
+							if !iStop {
+								glog.Error("Start ", service.Name(), " error: ", err)
+								startFail = true
+							}
 						}
 					}()
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(200 * time.Millisecond)
+					
+					if startFail {
+						waitgroup.Done()
+						return
+					}
+					iStop = false
 				}
 			
 			// graceful stop
 			default:
 				glog.Warning("Graceful stop")
+				iStop = true
 				for _, service := range Services {
 					service.Stop()
-					waitgroup.Done()
 				}
+				waitgroup.Done()
 			}
 		}
 	}()
@@ -124,17 +137,25 @@ func registerService(service Service) {
 }
 
 func Run(services ...Service) {
+	waitgroup.Add(1)
+	startFail := false
 	for _, service := range services {
 		registerService(service)
 		service.Init()
 		go func() {
-			waitgroup.Add(1)
 			if err := service.Start(); err != nil {
-				glog.Error("Start ", service.Name(), " error ", err)
-				waitgroup.Done()
+				if !iStop {
+					glog.Error("Start ", service.Name(), " error: ", err)
+					startFail = true
+				}
 			}
 		}()
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
+		
+		if startFail {
+			waitgroup.Done()
+			return
+		}
 	}
 
 	// wait

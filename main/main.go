@@ -50,8 +50,7 @@ func (s *FirstService) Start() error {
 	/*if err := s.conn.StartServer(server); err != nil {
 		return err
 	}*/
-	s.conn.Start(addr)
-	return nil
+	return s.conn.Start(addr)
 }
 
 func (s *FirstService) Stop() {
@@ -71,7 +70,7 @@ func (s *FirstService) GetInstance() interface{} {
 }
 
 func (s *FirstService) handler(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
+	return c.String(http.StatusOK, "First service!")
 }
 
 /* END First Service */
@@ -110,8 +109,7 @@ func (s *SecondService) Start() error {
 	/*if err := s.conn.StartServer(server); err != nil {
 		return err
 	}*/
-	s.conn.Start(addr)
-	return nil
+	return s.conn.Start(addr)
 }
 
 func (s *SecondService) Stop() {
@@ -131,7 +129,7 @@ func (s *SecondService) GetInstance() interface{} {
 }
 
 func (s *SecondService) handler(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
+	return c.String(http.StatusOK, "Second service!")
 }
 
 /* END Second Service */
