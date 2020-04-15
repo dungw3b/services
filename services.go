@@ -109,7 +109,7 @@ func Init(parser ParseConfigFunc) {
 func GetService(name string) interface{} {
 	for _, service := range Services {
 		if service.Name() == name {
-			glog.Info(service)
+			//glog.Info(service)
 			return service
 		}
 	}
