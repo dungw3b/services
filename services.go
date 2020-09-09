@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"io/ioutil"
 	"os/signal"
-	"github.com/golang/glog"
-	"github.com/olebedev/config"
+	"github.com/dungw3b/glog"
+	"github.com/dungw3b/config"
 )
 
 var (
